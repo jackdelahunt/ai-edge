@@ -1,62 +1,54 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
-
 configurations:
   - servicemonitor-matchlabels.yaml
-
 labels:
   - includeSelectors: true
     pairs:
       app: tensorflow-housing-app
-
 resources:
-- ../../base
-- housing-servicemonitor.yaml
-
+  - ../../base
+  - housing-servicemonitor.yaml
 namespace: tensorflow-housing-app
 namePrefix: tensorflow-housing-app-
-
 commonLabels:
   app: tensorflow-housing-app-1
-
 patches:
-- patch: |-
-    apiVersion: apps/v1
-    kind: Deployment
-    metadata:
-      name: model-1
-    spec:
-      template:
-        spec:
-          containers:
-            - name: model
-              readinessProbe:
-                httpGet:
-                  path: /v2/models/tensorflow-housing/ready
-  target:
-    kind: Deployment
-
+  - patch: |-
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: model-1
+      spec:
+        template:
+          spec:
+            containers:
+              - name: model
+                readinessProbe:
+                  httpGet:
+                    path: /v2/models/tensorflow-housing/ready
+    target:
+      kind: Deployment
 replacements:
-- source:
-    kind: Service
-    fieldPath: metadata.name
-  targets:
-  - select:
-      group: route.openshift.io
-      kind: Route
-    fieldPaths:
-      - spec.to.name
-- source:
-    kind: Service
-    fieldPath: metadata.labels.app
-  targets:
-  - select:
-      group: monitoring.coreos.com
-      kind: ServiceMonitor
-    fieldPaths:
-      - spec.selector.matchLabels.app
-
+  - source:
+      kind: Service
+      fieldPath: metadata.name
+    targets:
+      - select:
+          group: route.openshift.io
+          kind: Route
+        fieldPaths:
+          - spec.to.name
+  - source:
+      kind: Service
+      fieldPath: metadata.labels.app
+    targets:
+      - select:
+          group: monitoring.coreos.com
+          kind: ServiceMonitor
+        fieldPaths:
+          - spec.selector.matchLabels.app
 images:
-- name: edge-model-template-image
-  newName: quay.io/rhoai-edge/tensorflow-housing
-  digest: sha256:b5f11c2f380e76bb4dc5b66e40fff46ee277cd9a7477a6519b95dc8017f67852
+  - name: edge-model-template-image
+    newName: quay.io/jackdelahunt/edgetesting
+    digest: sha256:0143eaf70ab4cbbba439d9b3828e58f2d8c5a4ddb2de4417a3b4ceab709ac0d4
